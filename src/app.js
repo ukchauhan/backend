@@ -14,4 +14,12 @@ app.use(express.urlencoded({extended : true}));// accept data from url
 app.use(express.static("public"));//store static file in public
 app.use(cookieParser());//
 
+
+//import routes 
+import userRouter from "./routes/user.routs.js"
+
+
+//routes declaration
+app.use("/user", userRouter);
+
 export {app}
