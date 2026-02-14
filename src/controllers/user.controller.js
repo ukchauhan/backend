@@ -3,16 +3,35 @@ import {apiErrorHandler} from "../utils/apiErrorHandler.js"
 import {User} from "../models/user.model.js"//for chek existed user
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import {apiResponse} from "../utils/apiResponse.js"
+
+
+const generateAccessAndRefereshTokens = async(userId) =>{
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+
+        return {accessToken, refreshToken}
+
+
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    }
+}
+
 const registerUser = asyncHandler( async(req , res)=>{
   const {fullName,email, username, password} = req.body
   console.log("email :", email);
+
 
   if(// validation check if any field is empty
     [fullName,email,username,password].some((field)=> field?.trim() === "")
   ){
     throw new apiErrorHandler(400,"All fields are must required");
   };
-
 
   //validation check if user is already exists or not
   const existedUser = await User.findOne({
@@ -22,9 +41,6 @@ const registerUser = asyncHandler( async(req , res)=>{
   if(existedUser){
     throw new apiErrorHandler(409,"User with email or username is already exists");
   }
-
-  
-
 
   const avtarLocalPath = req.files?.avtar[0]?.path;// if req in file exists than avtar[0] exists 
                                                     // than path if exists in local 
@@ -71,4 +87,83 @@ const registerUser = asyncHandler( async(req , res)=>{
 
 });
 
-export {registerUser}
+const userLogin = asyncHandler(async (req,res)=>{
+
+  const {email,username,password} = req.body;
+
+  console.log(req.body);
+
+
+  if(!username && !email){
+    throw new apiErrorHandler(400,"Email or username is required !!");
+  }
+
+  const user = await User.findOne({
+  $or: [
+    { email: email?.trim() },
+    { username: username?.trim() }
+  ]
+  });
+
+
+  if (!user) {
+    throw new apiErrorHandler(404, "User does not exist")
+  }
+
+  if (!user) {
+    throw new apiErrorHandler(404, "User does not exist")
+  }
+
+  const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new apiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User logged In Successfully"
+        )
+    )
+
+});
+
+
+const userLogout = asyncHandler(async(req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new apiResponse(200, {}, "User logged Out"))
+})
+
+
+export {registerUser , userLogin , userLogout}
