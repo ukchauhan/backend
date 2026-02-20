@@ -1,4 +1,4 @@
-# Learning Backend || 
+# Learning Backend || 🚀 Backend API
 A scalable Node.js backend built with Express.js and MongoDB that provides user authentication, profile management, media upload, and channel subscription features.
 
 This project follows a clean architecture using controllers, models, middleware, and utilities for maintainability and scalability.
