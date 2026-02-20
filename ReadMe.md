@@ -46,35 +46,6 @@ This project follows a clean architecture using controllers, models, middleware,
   - cookie-parser
   - dotenv
 
-📁 Project Structure:
-src/
-│
-├── controllers/
-│   └── user.controller.js
-│
-├── DB/
-│   └── databaseConnect.js
-│
-├── middlewares/
-│   ├── auth.middleware.js
-│   └── multer.middleware.js
-│
-├── models/
-│   ├── user.model.js
-│   ├── video.model.js
-│   └── subscription.js
-│
-├── routes/
-│   └── user.routes.js
-│
-├── utils/
-│   ├── asyncHandler.js
-│   ├── apiErrorHandler.js
-│   ├── apiResponse.js
-│   └── cloudinary.js
-│
-├── app.js
-└── index.js
 
 🔑 API Endpoints:
 
